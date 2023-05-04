@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/connmgr"
@@ -69,12 +68,9 @@ type transport struct {
 	rcmgr       network.ResourceManager
 	gater       connmgr.ConnectionGater
 
-	listenOnce     sync.Once
-	listenOnceErr  error
-	certManager    *certManager
-	hasCertManager atomic.Bool // set to true once the certManager is initialized
-	staticTLSConf  *tls.Config
-	tlsClientConf  *tls.Config
+	certManager   *certManager
+	staticTLSConf *tls.Config
+	tlsClientConf *tls.Config
 
 	noise *noise.Transport
 
@@ -98,6 +94,7 @@ func New(key ic.PrivKey, psk pnet.PSK, connManager *quicreuse.ConnManager, gater
 	if err != nil {
 		return nil, err
 	}
+
 	t := &transport{
 		pid:         id,
 		privKey:     key,
@@ -112,6 +109,11 @@ func New(key ic.PrivKey, psk pnet.PSK, connManager *quicreuse.ConnManager, gater
 			return nil, err
 		}
 	}
+	cm, err := newCertManager(key, t.clock)
+	if err != nil {
+		return nil, err
+	}
+	t.certManager = cm
 	n, err := noise.New(noise.ID, key, nil)
 	if err != nil {
 		return nil, err
@@ -297,15 +299,7 @@ func (t *transport) Listen(laddr ma.Multiaddr) (tpt.Listener, error) {
 	if !isWebTransport {
 		return nil, fmt.Errorf("cannot listen on non-WebTransport addr: %s", laddr)
 	}
-	if t.staticTLSConf == nil {
-		t.listenOnce.Do(func() {
-			t.certManager, t.listenOnceErr = newCertManager(t.privKey, t.clock)
-			t.hasCertManager.Store(true)
-		})
-		if t.listenOnceErr != nil {
-			return nil, t.listenOnceErr
-		}
-	} else {
+	if t.staticTLSConf != nil {
 		return nil, errors.New("static TLS config not supported on WebTransport")
 	}
 	tlsConf := t.staticTLSConf.Clone()
@@ -332,11 +326,7 @@ func (t *transport) Proxy() bool {
 }
 
 func (t *transport) Close() error {
-	t.listenOnce.Do(func() {})
-	if t.certManager != nil {
-		return t.certManager.Close()
-	}
-	return nil
+	return t.certManager.Close()
 }
 
 func (t *transport) allowWindowIncrease(conn quic.Connection, size uint64) bool {
@@ -404,11 +394,6 @@ func (t *transport) Resolve(_ context.Context, maddr ma.Multiaddr) ([]ma.Multiad
 	return []ma.Multiaddr{beforeQuicMA.Encapsulate(quicComponent).Encapsulate(sniComponent).Encapsulate(afterQuicMA)}, nil
 }
 
-// AddCertHashes adds the current certificate hashes to a multiaddress.
-// If called before Listen, it's a no-op.
-func (t *transport) AddCertHashes(m ma.Multiaddr) (ma.Multiaddr, bool) {
-	if !t.hasCertManager.Load() {
-		return m, false
-	}
-	return m.Encapsulate(t.certManager.AddrComponent()), true
+func (t *transport) AddCertHashes(m ma.Multiaddr) ma.Multiaddr {
+	return m.Encapsulate(t.certManager.AddrComponent())
 }
