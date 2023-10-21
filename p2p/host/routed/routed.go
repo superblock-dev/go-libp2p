@@ -3,6 +3,7 @@ package routedhost
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/connmgr"
@@ -217,6 +218,10 @@ func (rh *RoutedHost) Close() error {
 }
 func (rh *RoutedHost) ConnManager() connmgr.ConnManager {
 	return rh.host.ConnManager()
+}
+
+func (rh *RoutedHost) MapPort(protocol string, internalPort int) (net.Addr, int, error) {
+	return rh.host.MapPort(protocol, internalPort)
 }
 
 var _ (host.Host) = (*RoutedHost)(nil)
