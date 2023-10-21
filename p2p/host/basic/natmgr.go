@@ -14,6 +14,12 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
+// discoveryNATPeriod is the period at which we try to discover NATs.
+var discoveryNATPeriod = 3 * time.Second
+
+// discoveryTry is the number of times we try to discover NATs.
+const discoveryTry = 5
+
 // NATManager is a simple interface to manage NAT devices.
 type NATManager interface {
 	// NAT gets the NAT device managed by the NAT manager.
@@ -88,11 +94,20 @@ func (nmgr *natManager) background(ctx context.Context) {
 
 	discoverCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
+	tryCount := 0
 	natInstance, err := inat.DiscoverNAT(discoverCtx)
-	if err != nil {
+	tryCount++
+	for err != nil {
 		log.Info("DiscoverNAT error:", err)
-		close(nmgr.ready)
-		return
+		if tryCount > discoveryTry {
+			log.Info("DiscoverNAT failed after ", tryCount, " tries")
+			return
+		}
+		time.Sleep(discoveryNATPeriod)
+		discoverCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		natInstance, err = inat.DiscoverNAT(discoverCtx)
+		tryCount++
 	}
 
 	nmgr.natMx.Lock()
