@@ -161,11 +161,6 @@ func (nat *NAT) refreshMappings(m *mapping) {
 func (nat *NAT) establishMapping(m *mapping) {
 	oldport := m.ExternalPort()
 
-	if oldport != 0 {
-		log.Info("Skipping port mapping, already mapped")
-		return
-	}
-
 	log.Debugf("Attempting port map: %s/%d", m.Protocol(), m.InternalPort())
 	const comment = "libp2p"
 
