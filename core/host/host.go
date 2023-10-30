@@ -5,6 +5,7 @@ package host
 
 import (
 	"context"
+	"net"
 
 	"github.com/libp2p/go-libp2p/core/connmgr"
 	"github.com/libp2p/go-libp2p/core/event"
@@ -72,4 +73,7 @@ type Host interface {
 
 	// EventBus returns the hosts eventbus
 	EventBus() event.Bus
+
+	// MapPort is a utility function that attempts to set up a port mapping
+	MapPort(protocol string, internalPort int) (net.Addr, int, error)
 }

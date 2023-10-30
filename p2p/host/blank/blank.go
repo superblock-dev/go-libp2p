@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 
 	"github.com/libp2p/go-libp2p/core/connmgr"
 	"github.com/libp2p/go-libp2p/core/event"
@@ -226,4 +227,8 @@ func (bh *BlankHost) ConnManager() connmgr.ConnManager {
 
 func (bh *BlankHost) EventBus() event.Bus {
 	return bh.eventbus
+}
+
+func (bh *BlankHost) MapPort(protocol string, internalPort int) (net.Addr, int, error) {
+	return nil, 0, nil
 }

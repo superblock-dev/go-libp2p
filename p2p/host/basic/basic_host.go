@@ -1125,6 +1125,21 @@ func (h *BasicHost) Close() error {
 	return nil
 }
 
+func (h *BasicHost) MapPort(protocol string, internalPort int) (net.Addr, int, error) {
+	for h.natmgr == nil || h.natmgr.NAT() == nil {
+		time.Sleep(time.Millisecond * 100)
+	}
+	mapping, err := h.natmgr.NAT().NewMapping(protocol, internalPort)
+	if err != nil {
+		return nil, 0, err
+	}
+	addr, err := mapping.ExternalAddr()
+	if err != nil {
+		return nil, 0, err
+	}
+	return addr, mapping.ExternalPort(), nil
+}
+
 type streamWrapper struct {
 	network.Stream
 	rw io.ReadWriteCloser
