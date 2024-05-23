@@ -207,6 +207,7 @@ func (t *transport) dial(ctx context.Context, addr ma.Multiaddr, url, sni string
 			Dial: func(ctx context.Context, addr string, tlsCfg *tls.Config, cfg *quic.Config) (quic.EarlyConnection, error) {
 				return conn.(quic.EarlyConnection), nil
 			},
+			QuicConfig: t.connManager.ClientConfig().Clone(),
 		},
 	}
 	rsp, sess, err := dialer.Dial(ctx, url, nil)
@@ -233,6 +234,7 @@ func (t *transport) upgrade(ctx context.Context, sess *webtransport.Session, p p
 	if err != nil {
 		return nil, err
 	}
+	defer str.Close()
 
 	// Now run a Noise handshake (using early data) and get all the certificate hashes from the server.
 	// We will verify that the certhashes we used to dial is a subset of the certhashes we received from the server.
@@ -264,6 +266,7 @@ func (t *transport) upgrade(ctx context.Context, sess *webtransport.Session, p p
 	if err != nil {
 		return nil, err
 	}
+	defer c.Close()
 	// The Noise handshake _should_ guarantee that our verification callback is called.
 	// Double-check just in case.
 	if !verified {
@@ -293,9 +296,12 @@ func (t *transport) CanDial(addr ma.Multiaddr) bool {
 }
 
 func (t *transport) Listen(laddr ma.Multiaddr) (tpt.Listener, error) {
-	isWebTransport, _ := IsWebtransportMultiaddr(laddr)
+	isWebTransport, certhashCount := IsWebtransportMultiaddr(laddr)
 	if !isWebTransport {
 		return nil, fmt.Errorf("cannot listen on non-WebTransport addr: %s", laddr)
+	}
+	if certhashCount > 0 {
+		return nil, fmt.Errorf("cannot listen on a specific certhash non-WebTransport addr: %s", laddr)
 	}
 	if t.staticTLSConf == nil {
 		t.listenOnce.Do(func() {

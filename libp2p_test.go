@@ -99,7 +99,7 @@ func TestAutoNATService(t *testing.T) {
 
 func TestDefaultListenAddrs(t *testing.T) {
 	reTCP := regexp.MustCompile("/(ip)[4|6]/((0.0.0.0)|(::))/tcp/")
-	reQUIC := regexp.MustCompile("/(ip)[4|6]/((0.0.0.0)|(::))/udp/([0-9]*)/quic")
+	reQUIC := regexp.MustCompile("/(ip)[4|6]/((0.0.0.0)|(::))/udp/([0-9]*)/quic-v1")
 	reCircuit := regexp.MustCompile("/p2p-circuit")
 
 	// Test 1: Setting the correct listen addresses if userDefined.Transport == nil && userDefined.ListenAddrs == nil
@@ -180,7 +180,7 @@ func TestTransportConstructorTCP(t *testing.T) {
 	require.NoError(t, err)
 	defer h.Close()
 	require.NoError(t, h.Network().Listen(ma.StringCast("/ip4/127.0.0.1/tcp/0")))
-	err = h.Network().Listen(ma.StringCast("/ip4/127.0.0.1/udp/0/quic"))
+	err = h.Network().Listen(ma.StringCast("/ip4/127.0.0.1/udp/0/quic-v1"))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), swarm.ErrNoTransport.Error())
 }
@@ -192,7 +192,7 @@ func TestTransportConstructorQUIC(t *testing.T) {
 	)
 	require.NoError(t, err)
 	defer h.Close()
-	require.NoError(t, h.Network().Listen(ma.StringCast("/ip4/127.0.0.1/udp/0/quic")))
+	require.NoError(t, h.Network().Listen(ma.StringCast("/ip4/127.0.0.1/udp/0/quic-v1")))
 	err = h.Network().Listen(ma.StringCast("/ip4/127.0.0.1/tcp/0"))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), swarm.ErrNoTransport.Error())
@@ -325,8 +325,8 @@ func TestTransportCustomAddressWebTransport(t *testing.T) {
 	require.NotEqual(t, addrs[0], customAddr)
 	restOfAddr, lastComp := ma.SplitLast(addrs[0])
 	restOfAddr, secondToLastComp := ma.SplitLast(restOfAddr)
-	require.Equal(t, lastComp.Protocol().Code, ma.P_CERTHASH)
-	require.Equal(t, secondToLastComp.Protocol().Code, ma.P_CERTHASH)
+	require.Equal(t, ma.P_CERTHASH, lastComp.Protocol().Code)
+	require.Equal(t, ma.P_CERTHASH, secondToLastComp.Protocol().Code)
 	require.True(t, restOfAddr.Equal(customAddr))
 }
 
@@ -352,7 +352,7 @@ func TestTransportCustomAddressWebTransportDoesNotStall(t *testing.T) {
 	addrs := h.Addrs()
 	require.Len(t, addrs, 1)
 	_, lastComp := ma.SplitLast(addrs[0])
-	require.NotEqual(t, lastComp.Protocol().Code, ma.P_CERTHASH)
+	require.NotEqual(t, ma.P_CERTHASH, lastComp.Protocol().Code)
 	// We did not add the certhash to the multiaddr
 	require.Equal(t, addrs[0], customAddr)
 }

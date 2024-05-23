@@ -39,12 +39,7 @@ func TestParseWebsocketNetAddr(t *testing.T) {
 		t.Fatalf("expect \"not a websocket address\", got \"%s\"", err)
 	}
 
-	wsAddr := addrWrapper{
-		URL: &url.URL{
-			Scheme: "ws",
-			Host:   "127.0.0.1:5555",
-		},
-	}
+	wsAddr := NewAddrWithScheme("127.0.0.1:5555", false)
 	parsed, err := ParseWebsocketNetAddr(wsAddr)
 	if err != nil {
 		t.Fatal(err)
@@ -78,9 +73,9 @@ func TestListeningOnDNSAddr(t *testing.T) {
 	require.NoError(t, err)
 	addr := ln.Multiaddr()
 	first, rest := ma.SplitFirst(addr)
-	require.Equal(t, first.Protocol().Code, ma.P_DNS)
-	require.Equal(t, first.Value(), "localhost")
+	require.Equal(t, ma.P_DNS, first.Protocol().Code)
+	require.Equal(t, "localhost", first.Value())
 	next, _ := ma.SplitFirst(rest)
-	require.Equal(t, next.Protocol().Code, ma.P_TCP)
-	require.NotEqual(t, next.Value(), "0")
+	require.Equal(t, ma.P_TCP, next.Protocol().Code)
+	require.NotEqual(t, 0, next.Value())
 }

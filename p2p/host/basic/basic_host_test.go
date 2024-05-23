@@ -377,7 +377,7 @@ func TestHostProtoPreknowledge(t *testing.T) {
 
 	// This test implicitly relies on 1 connection. If a background identify
 	// completes after we set the stream handler below things break
-	require.Equal(t, 1, len(h1.Network().ConnsToPeer(h2.ID())))
+	require.Len(t, h1.Network().ConnsToPeer(h2.ID()), 1)
 
 	// wait for identify handshake to finish completely
 	select {
@@ -469,7 +469,7 @@ func TestNewStreamResolve(t *testing.T) {
 			break
 		}
 	}
-	assert.NotEqual(t, dialAddr, "")
+	assert.NotEqual(t, "", dialAddr)
 
 	// Add the DNS multiaddr to h1's peerstore.
 	maddr, err := ma.NewMultiaddr(dialAddr)
@@ -506,7 +506,7 @@ func TestProtoDowngrade(t *testing.T) {
 		defer s.Close()
 		result, err := io.ReadAll(s)
 		assert.NoError(t, err)
-		assert.Equal(t, string(result), "bar")
+		assert.Equal(t, "bar", string(result))
 		connectedOn <- s.Protocol()
 	})
 
@@ -527,7 +527,7 @@ func TestProtoDowngrade(t *testing.T) {
 		defer s.Close()
 		result, err := io.ReadAll(s)
 		assert.NoError(t, err)
-		assert.Equal(t, string(result), "foo")
+		assert.Equal(t, "foo", string(result))
 		connectedOn <- s.Protocol()
 	})
 
@@ -739,7 +739,7 @@ func TestNegotiationCancel(t *testing.T) {
 
 	select {
 	case err := <-errCh:
-		require.Equal(t, err, context.Canceled)
+		require.ErrorIs(t, err, context.Canceled)
 	case <-time.After(500 * time.Millisecond):
 		// failed to cancel
 		t.Fatal("expected negotiation to be canceled")
@@ -839,6 +839,11 @@ func TestInferWebtransportAddrsFromQuic(t *testing.T) {
 			out:  []string{"/ip4/0.0.0.0/udp/9999/quic-v1", "/ip4/0.0.0.0/udp/9999/quic-v1/webtransport", "/ip4/1.2.3.4/udp/9999/quic-v1", "/ip4/1.2.3.4/udp/9999/quic-v1/webtransport"},
 		},
 		{
+			name: "Happy Path With CertHashes",
+			in:   []string{"/ip4/0.0.0.0/udp/9999/quic-v1", "/ip4/0.0.0.0/udp/9999/quic-v1/webtransport/certhash/uEgNmb28/certhash/uEgNmb28", "/ip4/1.2.3.4/udp/9999/quic-v1"},
+			out:  []string{"/ip4/0.0.0.0/udp/9999/quic-v1", "/ip4/0.0.0.0/udp/9999/quic-v1/webtransport/certhash/uEgNmb28/certhash/uEgNmb28", "/ip4/1.2.3.4/udp/9999/quic-v1", "/ip4/1.2.3.4/udp/9999/quic-v1/webtransport"},
+		},
+		{
 			name: "Already discovered",
 			in:   []string{"/ip4/0.0.0.0/udp/9999/quic-v1", "/ip4/0.0.0.0/udp/9999/quic-v1/webtransport", "/ip4/1.2.3.4/udp/9999/quic-v1", "/ip4/1.2.3.4/udp/9999/quic-v1/webtransport"},
 			out:  []string{"/ip4/0.0.0.0/udp/9999/quic-v1", "/ip4/0.0.0.0/udp/9999/quic-v1/webtransport", "/ip4/1.2.3.4/udp/9999/quic-v1", "/ip4/1.2.3.4/udp/9999/quic-v1/webtransport"},
@@ -877,9 +882,6 @@ func TestInferWebtransportAddrsFromQuic(t *testing.T) {
 			sort.StringSlice(tc.in).Sort()
 			sort.StringSlice(tc.out).Sort()
 			min := make([]ma.Multiaddr, 0, len(tc.in))
-			sort.Slice(tc.in, func(i, j int) bool {
-				return tc.in[i] < tc.in[j]
-			})
 			for _, addr := range tc.in {
 				min = append(min, ma.StringCast(addr))
 			}

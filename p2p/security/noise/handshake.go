@@ -3,6 +3,7 @@ package noise
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"hash"
@@ -12,11 +13,11 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/sec"
 	"github.com/libp2p/go-libp2p/p2p/security/noise/pb"
 
 	"github.com/flynn/noise"
 	pool "github.com/libp2p/go-buffer-pool"
-	"github.com/minio/sha256-simd"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -276,7 +277,7 @@ func (s *secureSession) handleRemoteHandshakePayload(payload []byte, remoteStati
 
 	// check the peer ID if enabled
 	if s.checkPeerID && s.remoteID != id {
-		return nil, fmt.Errorf("peer id mismatch: expected %s, but remote key matches %s", s.remoteID.Pretty(), id.Pretty())
+		return nil, sec.ErrPeerIDMismatch{Expected: s.remoteID, Actual: id}
 	}
 
 	// verify payload is signed by asserted remote libp2p key.
