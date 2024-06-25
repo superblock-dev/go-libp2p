@@ -1,6 +1,7 @@
 package mplex
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
@@ -14,6 +15,7 @@ type stream mp.Stream
 var _ network.MuxedStream = &stream{}
 
 func (s *stream) Read(b []byte) (n int, err error) {
+	fmt.Println("mplex/stream.go:read")
 	n, err = s.mplex().Read(b)
 	if err == mp.ErrStreamReset {
 		err = network.ErrReset
@@ -23,6 +25,7 @@ func (s *stream) Read(b []byte) (n int, err error) {
 }
 
 func (s *stream) Write(b []byte) (n int, err error) {
+	fmt.Println("mplex/stream.go")
 	n, err = s.mplex().Write(b)
 	if err == mp.ErrStreamReset {
 		err = network.ErrReset

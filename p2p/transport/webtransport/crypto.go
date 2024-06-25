@@ -148,6 +148,7 @@ func newDeterministicReader(seed []byte, salt []byte, info string) io.Reader {
 }
 
 func (r *deterministicReader) Read(p []byte) (n int, err error) {
+	fmt.Println("webtransport/crypto.go:read")
 	if len(p) == 1 {
 		return r.singleByteReader.Read(p)
 	}

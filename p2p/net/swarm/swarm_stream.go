@@ -52,6 +52,7 @@ func (s *Stream) Conn() network.Conn {
 
 // Read reads bytes from a stream.
 func (s *Stream) Read(p []byte) (int, error) {
+	fmt.Println("swarm/read")
 	n, err := s.stream.Read(p)
 	// TODO: push this down to a lower level for better accuracy.
 	if s.conn.swarm.bwc != nil {
@@ -63,6 +64,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 
 // Write writes bytes to a stream, flushing for each call.
 func (s *Stream) Write(p []byte) (int, error) {
+	fmt.Println("swarm_steam.go: Write")
 	n, err := s.stream.Write(p)
 	// TODO: push this down to a lower level for better accuracy.
 	if s.conn.swarm.bwc != nil {

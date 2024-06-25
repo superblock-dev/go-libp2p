@@ -3,6 +3,7 @@ package pnet
 import (
 	"crypto/cipher"
 	"crypto/rand"
+	"fmt"
 	"io"
 	"net"
 
@@ -29,6 +30,7 @@ type pskConn struct {
 }
 
 func (c *pskConn) Read(out []byte) (int, error) {
+	fmt.Println("pnet/psk_conn.go:read")
 	if c.readS20 == nil {
 		nonce := make([]byte, 24)
 		_, err := io.ReadFull(c.Conn, nonce)
@@ -46,6 +48,7 @@ func (c *pskConn) Read(out []byte) (int, error) {
 }
 
 func (c *pskConn) Write(in []byte) (int, error) {
+	fmt.Println("pnet/psk_conn.go")
 	if c.writeS20 == nil {
 		nonce := make([]byte, 24)
 		_, err := rand.Read(nonce)

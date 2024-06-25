@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/libp2p/go-libp2p/core/network"
@@ -27,6 +28,7 @@ func (c conn) RemoteAddr() net.Addr {
 }
 
 func (c conn) Read(b []byte) (int, error) {
+	fmt.Println("websocket/conn.go:read")
 	n, err := c.Conn.Read(b)
 	if err == nil && n == 0 && c.readAttempts < maxReadAttempts {
 		c.readAttempts++

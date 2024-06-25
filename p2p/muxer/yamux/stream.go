@@ -1,6 +1,7 @@
 package yamux
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/network"
@@ -14,6 +15,7 @@ type stream yamux.Stream
 var _ network.MuxedStream = &stream{}
 
 func (s *stream) Read(b []byte) (n int, err error) {
+	fmt.Println("yamux/stream.go:read")
 	n, err = s.yamux().Read(b)
 	if err == yamux.ErrStreamReset {
 		err = network.ErrReset
@@ -23,6 +25,7 @@ func (s *stream) Read(b []byte) (n int, err error) {
 }
 
 func (s *stream) Write(b []byte) (n int, err error) {
+	fmt.Println("yamux/stream.go")
 	n, err = s.yamux().Write(b)
 	if err == yamux.ErrStreamReset {
 		err = network.ErrReset

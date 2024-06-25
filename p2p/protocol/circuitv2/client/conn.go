@@ -56,10 +56,12 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) Read(buf []byte) (int, error) {
+	fmt.Println("circuitv2/read")
 	return c.stream.Read(buf)
 }
 
 func (c *Conn) Write(buf []byte) (int, error) {
+	fmt.Println("circuitv2/client/conn.go: Write")
 	return c.stream.Write(buf)
 }
 

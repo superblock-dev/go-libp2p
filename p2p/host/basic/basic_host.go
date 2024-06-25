@@ -1146,10 +1146,12 @@ type streamWrapper struct {
 }
 
 func (s *streamWrapper) Read(b []byte) (int, error) {
+	fmt.Println("host/basic/basic_host.go:read")
 	return s.rw.Read(b)
 }
 
 func (s *streamWrapper) Write(b []byte) (int, error) {
+	fmt.Println("host/basic/basic_host.go")
 	return s.rw.Write(b)
 }
 

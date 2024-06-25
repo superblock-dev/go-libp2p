@@ -2,6 +2,7 @@ package noise
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	pool "github.com/libp2p/go-buffer-pool"
@@ -24,6 +25,7 @@ const LengthPrefixLength = 2
 //
 // Honours io.Reader in terms of behaviour.
 func (s *secureSession) Read(buf []byte) (int, error) {
+	fmt.Println("security/noise:read")
 	s.readLock.Lock()
 	defer s.readLock.Unlock()
 
@@ -89,6 +91,7 @@ func (s *secureSession) Read(buf []byte) (int, error) {
 // Write encrypts the plaintext `in` data and sends it on the
 // secure connection.
 func (s *secureSession) Write(data []byte) (int, error) {
+	fmt.Println("noise/rw.go: Write")
 	s.writeLock.Lock()
 	defer s.writeLock.Unlock()
 
