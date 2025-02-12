@@ -8,5 +8,9 @@ on:
       - v*
 
 jobs:
-  releaser:
-    uses: protocol/.github/.github/workflows/tagpush.yml@master
+  build:
+    runs-on: [self-hosted, linux, tesseract]
+    steps:
+      - uses: actions/checkout@v2
+      - name: test
+        run: touch /tmp/sbtest
